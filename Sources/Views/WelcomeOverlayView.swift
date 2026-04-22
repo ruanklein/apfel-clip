@@ -2,7 +2,12 @@ import SwiftUI
 
 /// WelcomeSheetView — shown as a modal sheet on first launch only.
 struct WelcomeSheetView: View {
+    @Environment(\.colorScheme) private var colorScheme
     @Bindable var viewModel: PopoverViewModel
+
+    private var theme: AppTheme {
+        AppTheme(colorScheme: colorScheme)
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -10,7 +15,7 @@ struct WelcomeSheetView: View {
             VStack(spacing: 10) {
                 ZStack {
                     RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .fill(Color(red: 0.16, green: 0.49, blue: 0.22))
+                        .fill(AppTheme.brand)
                     Image(systemName: "doc.on.clipboard")
                         .font(.system(size: 28, weight: .semibold))
                         .foregroundStyle(.white)
@@ -88,7 +93,7 @@ struct WelcomeSheetView: View {
                     .padding(.vertical, 10)
             }
             .buttonStyle(.borderedProminent)
-            .tint(Color(red: 0.16, green: 0.49, blue: 0.22))
+            .tint(AppTheme.brandStrong)
             .padding(.horizontal, 32)
             .padding(.top, 16)
             .padding(.bottom, 24)
@@ -106,7 +111,7 @@ private struct WelcomeBullet: View {
         HStack(alignment: .top, spacing: 14) {
             Image(systemName: icon)
                 .font(.system(size: 16, weight: .medium))
-                .foregroundStyle(Color(red: 0.16, green: 0.49, blue: 0.22))
+                .foregroundStyle(AppTheme.brand)
                 .frame(width: 24)
                 .padding(.top, 1)
 

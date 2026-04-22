@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct PopoverRootView: View {
+    @Environment(\.colorScheme) private var colorScheme
     @Bindable var viewModel: PopoverViewModel
     @State private var hoveredActionID: String?
     @State private var hoveredHistoryID: String?
@@ -10,13 +11,14 @@ struct PopoverRootView: View {
     @State private var isIgnoringAppPickerPresented = false
     @State private var ignoredAppsSearchText = ""
 
+    private var theme: AppTheme {
+        AppTheme(colorScheme: colorScheme)
+    }
+
     var body: some View {
         ZStack {
             LinearGradient(
-                colors: [
-                    Color(red: 0.94, green: 0.98, blue: 0.93),
-                    Color(red: 0.99, green: 0.97, blue: 0.92),
-                ],
+                colors: theme.backgroundGradient,
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
@@ -69,7 +71,7 @@ struct PopoverRootView: View {
             HStack(alignment: .top, spacing: 12) {
                 ZStack {
                     RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .fill(Color(red: 0.16, green: 0.49, blue: 0.22))
+                        .fill(AppTheme.brand)
                     Image(systemName: "doc.on.clipboard")
                         .font(.system(size: 20, weight: .semibold))
                         .foregroundStyle(.white)
@@ -109,7 +111,7 @@ struct PopoverRootView: View {
                             Image(systemName: "gearshape.fill")
                                 .font(.system(size: 15, weight: .medium))
                                 .foregroundStyle(viewModel.screen == .settings
-                                    ? Color(red: 0.16, green: 0.49, blue: 0.22)
+                                    ? AppTheme.brand
                                     : Color.secondary)
                         }
                         .buttonStyle(.plain)
@@ -187,7 +189,7 @@ struct PopoverRootView: View {
                         }
                         .buttonStyle(.bordered)
                         .controlSize(.small)
-                        .tint(Color(red: 0.15, green: 0.45, blue: 0.20))
+                        .tint(AppTheme.brandStrong)
                         .disabled(viewModel.clipboardText.isEmpty)
                     }
 
@@ -212,12 +214,13 @@ struct PopoverRootView: View {
     }
 
     private func actionButton(_ action: ClipAction) -> some View {
+        let theme = self.theme
         let isThisRunning = viewModel.runningActionID == action.id
         let isOtherRunning = viewModel.isRunning && !isThisRunning
         let isHovered = hoveredActionID == action.id && !viewModel.isRunning
         let isDropTarget = dropTargetID == action.id
-        let green = Color(red: 0.16, green: 0.49, blue: 0.22)
-        let bgColor: Color = isThisRunning ? green.opacity(0.07) : isHovered ? .white : Color.white.opacity(0.8)
+        let green = AppTheme.brand
+        let bgColor: Color = isThisRunning ? theme.subtleBrandFill : isHovered ? theme.rowStrongHoverFill : theme.rowStrongFill
         let isSaved = viewModel.settings.savedCustomActions.contains { $0.id == action.id }
         let subtitleText = isThisRunning ? "Working…"
             : isSaved ? "Custom"
@@ -296,9 +299,9 @@ struct PopoverRootView: View {
                 .font(.system(size: 13, weight: .medium))
                 .padding(.horizontal, 12)
                 .padding(.vertical, 8)
-                .background(.white.opacity(0.95))
+                .background(theme.dragPreviewFill)
                 .clipShape(Capsule())
-                .shadow(color: .black.opacity(0.15), radius: 6, x: 0, y: 2)
+                .shadow(color: theme.shadowColor.opacity(0.7), radius: 6, x: 0, y: 2)
         }
         .dropDestination(for: String.self) { droppedIDs, _ in
             guard let droppedID = droppedIDs.first, droppedID != action.id else { return false }
@@ -325,7 +328,7 @@ struct PopoverRootView: View {
                                     .padding(.vertical, 9)
                                     .background(
                                         RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                            .fill(viewModel.selectedHistorySection == section ? Color(red: 0.16, green: 0.49, blue: 0.22) : Color.white.opacity(0.75))
+                                            .fill(viewModel.selectedHistorySection == section ? AppTheme.brand : theme.rowFill)
                                     )
                                     .foregroundStyle(viewModel.selectedHistorySection == section ? .white : .primary)
                             }
@@ -431,7 +434,7 @@ struct PopoverRootView: View {
         .padding(.vertical, 10)
         .background(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(isHoveredEntry ? Color.white : Color.white.opacity(0.8))
+                .fill(isHoveredEntry ? theme.rowStrongHoverFill : theme.rowStrongFill)
                 .animation(.easeInOut(duration: 0.1), value: isHoveredEntry)
         )
         .onHover { hovered in
@@ -450,7 +453,7 @@ struct PopoverRootView: View {
                     HStack(alignment: .firstTextBaseline) {
                         Label(entry.contentType.rawValue, systemImage: entry.contentType.icon)
                             .font(.caption.weight(.semibold))
-                            .foregroundStyle(Color(red: 0.16, green: 0.49, blue: 0.22))
+                            .foregroundStyle(AppTheme.brand)
                         Spacer()
                         Text(entry.timestamp, format: .dateTime.hour().minute().second())
                             .font(.caption2)
@@ -478,7 +481,7 @@ struct PopoverRootView: View {
         .padding(.vertical, 10)
         .background(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(isHoveredEntry ? Color.white : Color.white.opacity(0.8))
+                .fill(isHoveredEntry ? theme.rowStrongHoverFill : theme.rowStrongFill)
                 .animation(.easeInOut(duration: 0.1), value: isHoveredEntry)
         )
         .onHover { hovered in
@@ -726,7 +729,7 @@ struct PopoverRootView: View {
                                 .padding(.vertical, 8)
                                 .background(
                                     RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                        .fill(Color.white.opacity(0.78))
+                                        .fill(theme.rowFill)
                                 )
                             }
                         }
@@ -779,6 +782,34 @@ struct PopoverRootView: View {
 
             SurfaceCard {
                 VStack(alignment: .leading, spacing: 10) {
+                    Text("Appearance")
+                        .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    HStack(spacing: 8) {
+                        ForEach(AppAppearance.allCases, id: \.self) { appearance in
+                            Button {
+                                Task { await viewModel.updateAppAppearance(appearance) }
+                            } label: {
+                                Text(appearance.title)
+                                    .font(.caption.weight(.semibold))
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 9)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                            .fill(viewModel.settings.appAppearance == appearance ? AppTheme.brand : theme.rowFill)
+                                            .animation(.easeInOut(duration: 0.12), value: viewModel.settings.appAppearance)
+                                    )
+                                    .foregroundStyle(viewModel.settings.appAppearance == appearance ? .white : .primary)
+                                    .animation(.easeInOut(duration: 0.12), value: viewModel.settings.appAppearance)
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel(appearance.title)
+                        }
+                    }
+                }
+            }
+
+            SurfaceCard {
+                VStack(alignment: .leading, spacing: 10) {
                     Text("Preferred home panel")
                         .font(.system(size: 13, weight: .semibold, design: .rounded))
                     HStack(spacing: 8) {
@@ -794,7 +825,7 @@ struct PopoverRootView: View {
                                     .padding(.vertical, 9)
                                     .background(
                                         RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                            .fill(viewModel.settings.preferredPanel == panel ? Color(red: 0.16, green: 0.49, blue: 0.22) : Color.white.opacity(0.75))
+                                            .fill(viewModel.settings.preferredPanel == panel ? AppTheme.brand : theme.rowFill)
                                             .animation(.easeInOut(duration: 0.12), value: viewModel.settings.preferredPanel)
                                     )
                                     .foregroundStyle(viewModel.settings.preferredPanel == panel ? .white : .primary)
@@ -828,7 +859,7 @@ struct PopoverRootView: View {
                                     .padding(10)
                                     .background(
                                         RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                            .fill(Color.white.opacity(0.8))
+                                            .fill(theme.rowStrongFill)
                                     )
                             }
                         }
@@ -846,7 +877,7 @@ struct PopoverRootView: View {
                             HStack(spacing: 10) {
                                 Image(systemName: action.icon)
                                     .frame(width: 18)
-                                    .foregroundStyle(Color(red: 0.16, green: 0.49, blue: 0.22))
+                                    .foregroundStyle(AppTheme.brand)
 
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(action.name)
@@ -882,7 +913,7 @@ struct PopoverRootView: View {
                             .padding(.vertical, 8)
                             .background(
                                 RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                    .fill(Color.white.opacity(0.78))
+                                    .fill(theme.rowFill)
                             )
                         }
                     }
@@ -924,12 +955,12 @@ struct PopoverRootView: View {
         .frame(width: 26, height: 26)
         .background(
             RoundedRectangle(cornerRadius: 7, style: .continuous)
-                .fill(Color.white.opacity(0.85))
+                .fill(theme.capsuleFill)
         )
     }
 
     private var savedActionsSection: some View {
-        let green = Color(red: 0.16, green: 0.49, blue: 0.22)
+        let green = AppTheme.brand
         let saved = viewModel.settings.savedCustomActions
         return VStack(alignment: .leading, spacing: 10) {
             HStack {
@@ -940,7 +971,7 @@ struct PopoverRootView: View {
                         .font(.caption2.weight(.semibold))
                         .padding(.horizontal, 7)
                         .padding(.vertical, 3)
-                        .background(Capsule().fill(green.opacity(0.12)))
+                        .background(Capsule().fill(theme.subtleBrandFill))
                         .foregroundStyle(green)
                 }
                 Spacer()
@@ -962,7 +993,7 @@ struct PopoverRootView: View {
     }
 
     private func savedActionRow(_ saved: SavedCustomAction, index: Int, total: Int) -> some View {
-        let green = Color(red: 0.16, green: 0.49, blue: 0.22)
+        let green = AppTheme.brand
         let isExpanded = viewModel.editingSavedActionID == saved.id
         let isFirst = index == 0
         let isLast = index == total - 1
@@ -1034,7 +1065,7 @@ struct PopoverRootView: View {
             .padding(.vertical, 8)
             .background(
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(Color.white.opacity(0.78))
+                    .fill(theme.rowFill)
             )
             .contextMenu {
                 if !isFirst {
@@ -1090,7 +1121,7 @@ struct PopoverRootView: View {
                         .padding(8)
                         .background(
                             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                .fill(Color.white.opacity(0.9))
+                                .fill(theme.inputFill)
                         )
                         .frame(height: 130)
 
@@ -1110,7 +1141,7 @@ struct PopoverRootView: View {
                         }
                         .buttonStyle(.bordered)
                         .controlSize(.small)
-                        .tint(Color(red: 0.15, green: 0.45, blue: 0.20))
+                        .tint(AppTheme.brandStrong)
                         .disabled(promptIsEmpty)
                     }
 
@@ -1157,7 +1188,7 @@ struct PopoverRootView: View {
                                                 .padding(10)
                                                 .background(
                                                     RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                                        .fill(isHoveredPrompt ? Color.white : Color.white.opacity(0.78))
+                                                    .fill(isHoveredPrompt ? theme.rowHoverFill : theme.rowFill)
                                                         .animation(.easeInOut(duration: 0.1), value: isHoveredPrompt)
                                                 )
                                         }
@@ -1223,13 +1254,13 @@ struct PopoverRootView: View {
                     HStack(spacing: 5) {
                         Image(systemName: "arrow.down")
                             .font(.system(size: 11, weight: .semibold))
-                            .foregroundStyle(Color(red: 0.16, green: 0.49, blue: 0.22))
+                            .foregroundStyle(AppTheme.brand)
                         Text(result.actionName)
                             .font(.caption.weight(.semibold))
-                            .foregroundStyle(Color(red: 0.16, green: 0.49, blue: 0.22))
+                            .foregroundStyle(AppTheme.brand)
                         Image(systemName: "arrow.down")
                             .font(.system(size: 11, weight: .semibold))
-                            .foregroundStyle(Color(red: 0.16, green: 0.49, blue: 0.22))
+                            .foregroundStyle(AppTheme.brand)
                     }
                     Rectangle()
                         .fill(Color.secondary.opacity(0.2))
@@ -1240,7 +1271,7 @@ struct PopoverRootView: View {
                 // ── Result (large, primary, fills remaining space) ──────────
                 SurfaceCard(fillAvailableHeight: true) {
                     let isInClipboard = viewModel.clipboardText.trimmingCharacters(in: .whitespacesAndNewlines) == result.output
-                    let green = Color(red: 0.16, green: 0.49, blue: 0.22)
+                    let green = AppTheme.brand
                     VStack(alignment: .leading, spacing: 10) {
                         HStack(spacing: 8) {
                             Text("Result")
@@ -1272,7 +1303,7 @@ struct PopoverRootView: View {
                         .padding(8)
                         .background(
                             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                .fill(Color.white.opacity(0.9))
+                                    .fill(theme.inputFill)
                         )
 
                         Spacer(minLength: 0)
@@ -1318,7 +1349,7 @@ struct PopoverRootView: View {
                                     )
                                 }
                                 .buttonStyle(.bordered)
-                                .foregroundStyle(Color(red: 0.16, green: 0.49, blue: 0.22))
+                                .foregroundStyle(AppTheme.brand)
                             }
 
                             Button {
@@ -1349,7 +1380,7 @@ struct PopoverRootView: View {
                         .font(.caption.weight(.semibold))
                         .padding(.horizontal, 10)
                         .padding(.vertical, 5)
-                        .background(Color.white.opacity(0.86))
+                        .background(theme.capsuleFill)
                         .clipShape(Capsule())
 
                     Spacer()
@@ -1376,7 +1407,7 @@ struct PopoverRootView: View {
     private func screenTab(title: String, screen: ClipScreen, selectPanel: ClipPrimaryPanel?) -> some View {
         let isActive = viewModel.screen == screen
         let isResultUnavailable = screen == .result && viewModel.result == nil
-        let green = Color(red: 0.16, green: 0.49, blue: 0.22)
+        let green = AppTheme.brand
         return Button {
             if let panel = selectPanel {
                 Task { await viewModel.selectPrimaryPanel(panel) }
@@ -1390,7 +1421,7 @@ struct PopoverRootView: View {
                 .padding(.vertical, 9)
                 .background(
                     RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .fill(isActive ? green : Color.white.opacity(0.75))
+                        .fill(isActive ? green : theme.rowFill)
                         .animation(.easeInOut(duration: 0.12), value: isActive)
                 )
                 .foregroundStyle(isActive ? .white : isResultUnavailable ? Color.secondary.opacity(0.5) : Color.primary)
@@ -1418,7 +1449,7 @@ struct PopoverRootView: View {
         .padding(12)
         .background(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(Color.white.opacity(0.82))
+                .fill(theme.rowStrongFill)
         )
     }
 
@@ -1473,7 +1504,7 @@ struct PopoverRootView: View {
         case .starting:
             return .orange
         case .ready:
-            return Color(red: 0.16, green: 0.49, blue: 0.22)
+            return AppTheme.brand
         case .failed:
             return .red
         }
@@ -1571,7 +1602,7 @@ private struct ClipboardSourceAppPickerSheet: View {
                                 if ignoredBundleIDs.contains(app.bundleIdentifier.lowercased()) {
                                     Label("Added", systemImage: "checkmark.circle.fill")
                                         .font(.caption.weight(.semibold))
-                                        .foregroundStyle(Color(red: 0.16, green: 0.49, blue: 0.22))
+                                        .foregroundStyle(AppTheme.brand)
                                 }
                             }
                             .padding(.vertical, 4)
@@ -1608,8 +1639,13 @@ private struct ClipboardSourceAppPickerSheet: View {
 }
 
 private struct SurfaceCard<Content: View>: View {
+    @Environment(\.colorScheme) private var colorScheme
     let fillAvailableHeight: Bool
     @ViewBuilder let content: Content
+
+    private var theme: AppTheme {
+        AppTheme(colorScheme: colorScheme)
+    }
 
     init(fillAvailableHeight: Bool = false, @ViewBuilder content: () -> Content) {
         self.fillAvailableHeight = fillAvailableHeight
@@ -1624,12 +1660,12 @@ private struct SurfaceCard<Content: View>: View {
         .padding(14)
         .background(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(Color.white.opacity(0.62))
+                .fill(theme.surfaceCardFill)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(Color.white.opacity(0.55), lineWidth: 1)
+                .stroke(theme.surfaceCardStroke, lineWidth: 1)
         )
-        .shadow(color: .black.opacity(0.04), radius: 8, x: 0, y: 3)
+        .shadow(color: theme.shadowColor, radius: 8, x: 0, y: 3)
     }
 }

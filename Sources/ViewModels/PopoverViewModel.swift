@@ -54,6 +54,7 @@ final class PopoverViewModel {
     var isWelcomeVisible: Bool = false
     private var bannerDismissTask: Task<Void, Never>?
     var onHotkeyChanged: ((HotkeyConfig) -> Void)?
+    var onAppAppearanceChanged: ((AppAppearance) -> Void)?
 
     init(
         actionExecutor: any ClipActionExecuting,
@@ -515,6 +516,13 @@ final class PopoverViewModel {
     func updateAutoCopy(_ enabled: Bool) async {
         settings.autoCopy = enabled
         await persistSettings()
+    }
+
+    func updateAppAppearance(_ appearance: AppAppearance) async {
+        guard settings.appAppearance != appearance else { return }
+        settings.appAppearance = appearance
+        await persistSettings()
+        onAppAppearanceChanged?(appearance)
     }
 
     func updateClipboardHistoryLimit(_ value: Int) async {

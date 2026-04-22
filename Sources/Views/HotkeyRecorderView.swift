@@ -1,9 +1,14 @@
 import SwiftUI
 
 struct HotkeyRecorderView: View {
+    @Environment(\.colorScheme) private var colorScheme
     @Binding var config: HotkeyConfig
     @State private var isRecording = false
     @State private var localMonitor: Any?
+
+    private var theme: AppTheme {
+        AppTheme(colorScheme: colorScheme)
+    }
 
     var body: some View {
         Button {
@@ -23,18 +28,18 @@ struct HotkeyRecorderView: View {
                 } else {
                     Text(config.displayLabel)
                         .font(.system(size: 13, weight: .semibold, design: .rounded))
-                        .foregroundStyle(Color(red: 0.16, green: 0.49, blue: 0.22))
+                        .foregroundStyle(AppTheme.brand)
                 }
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
             .background(
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(isRecording ? Color.red.opacity(0.08) : Color.white.opacity(0.8))
+                    .fill(isRecording ? theme.destructiveFill : theme.rowStrongFill)
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .stroke(isRecording ? Color.red.opacity(0.3) : Color.clear, lineWidth: 1)
+                    .stroke(isRecording ? theme.destructiveStroke : Color.clear, lineWidth: 1)
             )
         }
         .buttonStyle(.plain)

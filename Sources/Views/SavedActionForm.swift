@@ -29,9 +29,13 @@ enum SavedActionIconCatalog {
 // MARK: - Icon grid (used inline when expanded)
 
 private struct IconGridView: View {
+    @Environment(\.colorScheme) private var colorScheme
     @Binding var selectedIcon: String
-    private let green = Color(red: 0.16, green: 0.49, blue: 0.22)
     private let columns = Array(repeating: GridItem(.flexible(), spacing: 6), count: 8)
+
+    private var theme: AppTheme {
+        AppTheme(colorScheme: colorScheme)
+    }
 
     var body: some View {
         ScrollView {
@@ -47,28 +51,31 @@ private struct IconGridView: View {
 
     private func iconCell(_ symbol: String) -> some View {
         let isSelected = symbol == selectedIcon
-        return ZStack {
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .fill(isSelected ? green.opacity(0.12) : Color.white.opacity(0.7))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .stroke(isSelected ? green : Color.clear, lineWidth: 1.5)
-                )
-            Image(systemName: symbol)
-                .font(.system(size: 15, weight: isSelected ? .semibold : .regular))
-                .foregroundStyle(isSelected ? green : Color.primary)
-        }
-        .frame(width: 36, height: 36)
-        .contentShape(Rectangle())
-        .onTapGesture {
+        return Button {
             withAnimation(.easeInOut(duration: 0.12)) { selectedIcon = symbol }
+        } label: {
+            ZStack {
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(isSelected ? theme.subtleBrandFill : theme.rowFill)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            .stroke(isSelected ? AppTheme.brand : Color.clear, lineWidth: 1.5)
+                    )
+                Image(systemName: symbol)
+                    .font(.system(size: 15, weight: isSelected ? .semibold : .regular))
+                    .foregroundStyle(isSelected ? AppTheme.brand : Color.primary)
+            }
+            .frame(width: 36, height: 36)
+            .contentShape(Rectangle())
         }
+        .buttonStyle(.plain)
     }
 }
 
 // MARK: - Save/edit form
 
 struct SavedActionFormView: View {
+    @Environment(\.colorScheme) private var colorScheme
     enum Mode {
         case create(prompt: String)
         case edit(action: SavedCustomAction)
@@ -85,7 +92,9 @@ struct SavedActionFormView: View {
     @State private var isIconGridVisible = false
     @State private var isGeneratingName = false
 
-    private let green = Color(red: 0.16, green: 0.49, blue: 0.22)
+    private var theme: AppTheme {
+        AppTheme(colorScheme: colorScheme)
+    }
 
     init(
         mode: Mode,
@@ -142,7 +151,7 @@ struct SavedActionFormView: View {
                     .padding(8)
                     .background(
                         RoundedRectangle(cornerRadius: 8, style: .continuous)
-                            .fill(Color.white.opacity(0.6))
+                            .fill(theme.rowFill)
                     )
             }
 
@@ -155,21 +164,21 @@ struct SavedActionFormView: View {
                     } label: {
                         ZStack {
                             RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                .fill(isIconGridVisible ? green.opacity(0.15) : Color.white.opacity(0.85))
+                                .fill(isIconGridVisible ? theme.subtleBrandFill : theme.inputFill)
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                        .stroke(isIconGridVisible ? green : green.opacity(0.25), lineWidth: 1.5)
+                                        .stroke(isIconGridVisible ? AppTheme.brand : theme.subtleBorder, lineWidth: 1.5)
                                 )
                             Image(systemName: selectedIcon)
                                 .font(.system(size: 20, weight: .semibold))
-                                .foregroundStyle(green)
+                                .foregroundStyle(AppTheme.brand)
                         }
                         .frame(width: 48, height: 48)
                     }
                     .buttonStyle(.plain)
                     Text(isIconGridVisible ? "Close" : "Icon")
                         .font(.caption2)
-                        .foregroundStyle(green)
+                        .foregroundStyle(AppTheme.brand)
                 }
 
                 // Name field
@@ -181,10 +190,10 @@ struct SavedActionFormView: View {
                         if isGeneratingName {
                             ProgressView()
                                 .controlSize(.mini)
-                                .tint(green)
+                                .tint(AppTheme.brand)
                             Text("Naming…")
                                 .font(.caption2)
-                                .foregroundStyle(green)
+                                .foregroundStyle(AppTheme.brand)
                         }
                     }
                     TextField(isGeneratingName ? "" : "e.g. Translate to Italian", text: $name)
@@ -192,11 +201,11 @@ struct SavedActionFormView: View {
                         .padding(8)
                         .background(
                             RoundedRectangle(cornerRadius: 8, style: .continuous)
-                                .fill(Color.white.opacity(isGeneratingName ? 0.6 : 0.9))
+                                .fill(isGeneratingName ? theme.rowFill : theme.inputFill)
                         )
                         .overlay(
                             RoundedRectangle(cornerRadius: 8, style: .continuous)
-                                .stroke(!name.isEmpty ? green.opacity(0.4) : Color.clear, lineWidth: 1)
+                                .stroke(!name.isEmpty ? AppTheme.brand.opacity(0.4) : Color.clear, lineWidth: 1)
                         )
                         .frame(height: 36)
                         .disabled(isGeneratingName)
@@ -239,17 +248,18 @@ struct SavedActionFormView: View {
                     onSave(name, selectedIcon, selectedTypes)
                 }
                 .buttonStyle(.borderedProminent)
+                .tint(AppTheme.brandStrong)
                 .disabled(!isValid)
             }
         }
         .padding(12)
         .background(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(Color(red: 0.94, green: 0.99, blue: 0.94).opacity(0.9))
+                .fill(theme.detailCardFill)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .stroke(green.opacity(0.22), lineWidth: 1)
+                .stroke(theme.detailStroke, lineWidth: 1)
         )
     }
 
@@ -266,7 +276,7 @@ struct SavedActionFormView: View {
                 .padding(.vertical, 5)
                 .background(
                     Capsule()
-                        .fill(isSelected ? green : Color.white.opacity(0.75))
+                        .fill(isSelected ? AppTheme.brand : theme.rowFill)
                 )
                 .foregroundStyle(isSelected ? .white : Color.primary)
         }

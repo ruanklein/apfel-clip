@@ -20,6 +20,20 @@ enum ClipPrimaryPanel: String, Codable, CaseIterable, Sendable {
     }
 }
 
+enum AppAppearance: String, Codable, CaseIterable, Equatable, Sendable {
+    case system
+    case light
+    case dark
+
+    var title: String {
+        switch self {
+        case .system: return "System Theme"
+        case .light: return "Light Theme"
+        case .dark: return "Dark Theme"
+        }
+    }
+}
+
 struct SavedCustomAction: Identifiable, Codable, Equatable, Hashable, Sendable {
     var id: String
     var name: String
@@ -98,6 +112,7 @@ struct ClipSettings: Codable, Equatable, Sendable {
     static let clipboardHistoryLimitRange = 1...40
     static let defaultClipboardHistoryLimit = 40
 
+    var appAppearance: AppAppearance = .system
     var hotkey: HotkeyConfig = HotkeyConfig()
     var autoCopy: Bool = false
     var clipboardHistoryLimit: Int = ClipSettings.defaultClipboardHistoryLimit
@@ -114,6 +129,7 @@ struct ClipSettings: Codable, Equatable, Sendable {
     var lastSeenVersion: String = ""
 
     init(
+        appAppearance: AppAppearance = .system,
         hotkey: HotkeyConfig = HotkeyConfig(),
         autoCopy: Bool = false,
         clipboardHistoryLimit: Int = ClipSettings.defaultClipboardHistoryLimit,
@@ -129,6 +145,7 @@ struct ClipSettings: Codable, Equatable, Sendable {
         checkForUpdatesOnLaunch: Bool = true,
         lastSeenVersion: String = ""
     ) {
+        self.appAppearance = appAppearance
         self.hotkey = hotkey
         self.autoCopy = autoCopy
         self.clipboardHistoryLimit = ClipSettings.clampClipboardHistoryLimit(clipboardHistoryLimit)
@@ -147,6 +164,7 @@ struct ClipSettings: Codable, Equatable, Sendable {
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
+        appAppearance = try container.decodeIfPresent(AppAppearance.self, forKey: .appAppearance) ?? .system
         hotkey = try container.decodeIfPresent(HotkeyConfig.self, forKey: .hotkey) ?? HotkeyConfig()
         autoCopy = try container.decodeIfPresent(Bool.self, forKey: .autoCopy) ?? false
         let decodedClipboardHistoryLimit = try container.decodeIfPresent(Int.self, forKey: .clipboardHistoryLimit)

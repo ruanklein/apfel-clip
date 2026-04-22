@@ -65,6 +65,7 @@ struct PersistenceTests {
         let defaults = UserDefaults(suiteName: "test-\(UUID().uuidString)")!
         let store = UserDefaultsSettingsStore(defaults: defaults, key: "settings")
         let settings = ClipSettings(
+            appAppearance: .dark,
             autoCopy: false,
             clipboardHistoryLimit: 12,
             ignoredClipboardSourceBundleIDs: ["com.apple.Passwords", "com.apple.finder"],
@@ -141,6 +142,7 @@ struct PersistenceTests {
                 }
                 """.data(using: .utf8))
                 let legacySettings = try decoder.decode(ClipSettings.self, from: legacyData)
+                #expect(legacySettings.appAppearance == .system)
                 #expect(legacySettings.clipboardHistoryLimit == ClipSettings.defaultClipboardHistoryLimit)
 
                 let outOfBoundsData = try #require("""
@@ -153,4 +155,19 @@ struct PersistenceTests {
                 #expect(clampedSettings.clipboardHistoryLimit == ClipSettings.clipboardHistoryLimitRange.upperBound)
                 #expect(clampedSettings.ignoredClipboardSourceBundleIDs == ["com.apple.Passwords"])
         }
+
+    @Test("ClipSettings preserves app appearance during decoding")
+    func appAppearanceCompatibility() throws {
+        let decoder = JSONDecoder()
+        let data = try #require("""
+        {
+            "appAppearance": "dark",
+            "preferredPanel": "actions"
+        }
+        """.data(using: .utf8))
+
+        let settings = try decoder.decode(ClipSettings.self, from: data)
+
+        #expect(settings.appAppearance == .dark)
+    }
 }

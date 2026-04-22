@@ -6,6 +6,13 @@ import Testing
 @MainActor
 struct AppDelegateTests {
 
+    @Test("App appearance maps to expected NSAppearance names")
+    func appAppearanceMapsToExpectedNames() {
+        #expect(AppAppearance.system.nsAppearanceName == nil)
+        #expect(AppAppearance.light.nsAppearanceName == .aqua)
+        #expect(AppAppearance.dark.nsAppearanceName == .darkAqua)
+    }
+
     @Test("Context menu has Open and Quit items")
     func contextMenuHasExpectedItems() {
         let delegate = AppDelegate()

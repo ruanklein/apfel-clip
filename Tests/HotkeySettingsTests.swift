@@ -66,4 +66,15 @@ struct HotkeySettingsTests {
         await viewModel.updateHotkey(newHotkey)
         #expect(callbackHotkey == newHotkey)
     }
+
+    @Test("updateAppAppearance persists the new appearance")
+    func updateAppAppearancePersists() async {
+        let (viewModel, settingsStore) = makeViewModel()
+
+        await viewModel.updateAppAppearance(.dark)
+
+        let saved = await settingsStore.load()
+        #expect(saved.appAppearance == .dark)
+        #expect(viewModel.settings.appAppearance == .dark)
+    }
 }

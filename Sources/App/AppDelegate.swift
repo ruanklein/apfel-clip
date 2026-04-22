@@ -5,6 +5,7 @@ import SwiftUI
 final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, PopoverPresenting {
     private var statusItem: NSStatusItem?
     private var popover: NSPopover?
+    private var popoverHostingController: NSHostingController<AnyView>?
     private var globalMonitor: Any?
 
     private let clipboardService = PasteboardClipboardService()
@@ -52,6 +53,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, Pop
         guard let statusButton = statusItem?.button,
               let popover else { return }
         if !popover.isShown {
+            applyAppAppearance(viewModel?.settings.appAppearance ?? .system)
             popover.show(relativeTo: statusButton.bounds, of: statusButton, preferredEdge: .minY)
             NSApp.activate(ignoringOtherApps: true)
         }
@@ -106,6 +108,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, Pop
         viewModel.onHotkeyChanged = { [weak self] config in
             self?.reconfigureHotkey(config)
         }
+        viewModel.onAppAppearanceChanged = { [weak self] appearance in
+            self?.applyAppAppearance(appearance)
+        }
         if CommandLine.arguments.contains("--simulate-first-run") {
             await viewModel.debugResetFirstRun()
         } else {
@@ -145,17 +150,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, Pop
     }
 
     private func configurePopover(viewModel: PopoverViewModel) {
-        let hostingController = NSHostingController(rootView: PopoverRootView(viewModel: viewModel))
+        let rootView = AnyView(
+            PopoverRootView(viewModel: viewModel)
+                .preferredColorScheme(viewModel.settings.appAppearance.preferredColorScheme)
+        )
+        let hostingController = NSHostingController(rootView: rootView)
         hostingController.view.frame = CGRect(x: 0, y: 0, width: 540, height: 820)
-        hostingController.view.appearance = NSAppearance(named: .aqua)
 
         let popover = NSPopover()
         popover.behavior = .transient
         popover.contentSize = NSSize(width: 540, height: 820)
         popover.contentViewController = hostingController
-        popover.appearance = NSAppearance(named: .aqua)
         self.popover = popover
+        self.popoverHostingController = hostingController
         popover.delegate = self
+        applyAppAppearance(viewModel.settings.appAppearance)
+    }
+
+    private func applyAppAppearance(_ appAppearance: AppAppearance) {
+        let appearance = appAppearance.nsAppearanceName.flatMap(NSAppearance.init(named:))
+        popoverHostingController?.view.appearance = appearance
+        popover?.appearance = appearance
     }
 
     private func configureStatusItem() {
